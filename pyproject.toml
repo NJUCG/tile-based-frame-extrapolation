@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tile-based-frame-extrapolation"
+version = "0.1.0"
+description = "Official implementation of Tile-based Frame Extrapolation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Liang Pu", email = "522023330073@smail.nju.edu.cn"},
+  {name = "Haodong Tian", email = "thdlrt@qq.com"},
+  {name = "Jiawei Zhang", email = "502024330064@smail.nju.edu.cn"},
+  {name = "Weitao Zhang", email = "502025330070@smail.nju.edu.cn"},
+  {name = "Yanwen Guo", email = "ywguo@nju.edu.cn"},
+  {name = "Junqiu Zhu", email = "junqiuzhu27@gmail.com"},
+  {name = "Jie Guo", email = "guojie@nju.edu.cn"},
+]
+dependencies = [
+  "numpy>=1.26,<3",
+  "PyYAML>=6,<7",
+  "torch>=2.4,<3",
+]
+
+[project.optional-dependencies]
+preprocess = [
+  "opencv-python-headless>=4.9",
+  "PyOpenGL>=3.1.7",
+  "PyOpenGL-accelerate>=3.1.7; platform_system == 'Linux'",
+]
+metrics = ["lpips>=0.1.4"]
+export = ["onnx>=1.16", "safetensors>=0.4"]
+dev = ["pytest>=8,<10"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"tbfe.preprocess" = ["shaders/*.comp", "assets/*.exr"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+pythonpath = ["src"]

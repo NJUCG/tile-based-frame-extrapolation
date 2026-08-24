@@ -1,0 +1,106 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments and local tooling
+.venv/
+venv/
+.env
+.env.*
+.ssh/
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+credentials*
+secrets*
+.idea/
+.vscode/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Training / inference outputs
+outputs/
+result/
+fig/
+Ablation/
+afw_ab/
+save/
+video/
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+
+# Media / rendered assets
+*.exr
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tif
+*.tiff
+*.avi
+*.mp4
+*.mov
+*.mkv
+*.webm
+
+# Model weights / exported engines
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.engine
+*.trt
+*.data
+*.safetensors
+*.bin
+*.pkl
+*.pickle
+*.joblib
+*.pb
+*.tflite
+
+# Dataset / arrays / large generated artifacts
+/data/
+/datasets/
+/checkpoints/
+/weights/
+/runs/
+/wandb/
+/pre_release_weights/
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.parquet
+*.arrow
+
+# Archives should be generated outside the source tree
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+
+# Private local helper excluded from the release
+/download.py
+
+# Deliberately reviewed, minimal release assets
+!examples/factory_smoke/frame.npz
+!src/tbfe/preprocess/assets/Precomputed.exr
+
+# Notebook checkpoints
+.ipynb_checkpoints/

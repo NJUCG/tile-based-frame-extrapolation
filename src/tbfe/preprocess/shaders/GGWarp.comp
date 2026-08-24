@@ -1,0 +1,199 @@
+# version 450
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(binding = 0) uniform sampler2D color;
+layout(binding = 1) uniform sampler2D mv;
+layout(binding = 2) uniform sampler2D baseColor0;
+layout(binding = 3) uniform sampler2D baseColor1;
+layout(binding = 4) uniform sampler2D normal0;
+layout(binding = 5) uniform sampler2D normal1;
+layout(binding = 6) uniform sampler2D mask;
+
+layout(rgba32f, binding = 0) writeonly uniform image2D  warpColor;
+
+struct WeightedPixel {
+    ivec2 position;
+    float weight;
+};
+
+WeightedPixel maxWeightPixels[4];
+
+void initializeMaxWeights() {
+    for (int i = 0; i < 4; i++) {
+        maxWeightPixels[i].position = ivec2(0, 0);
+        maxWeightPixels[i].weight = 0.0;
+    }
+}
+
+void updateMaxWeights(ivec2 pos, float weight) {
+    int minIndex = 0;
+    float minWeight = maxWeightPixels[0].weight;
+    for (int i = 1; i < 4; i++) {
+        if (maxWeightPixels[i].weight < minWeight) {
+            minWeight = maxWeightPixels[i].weight;
+            minIndex = i;
+        }
+    }
+
+    if (weight > minWeight) {
+        maxWeightPixels[minIndex].position = pos;
+        maxWeightPixels[minIndex].weight = weight;
+    }
+}
+
+const ivec2 offsets[] = {
+    ivec2(-1, -1), ivec2(0, -1), ivec2(1, -1),
+    ivec2(-1, 0), ivec2(1, 0),//ivec2(0,0),
+    ivec2(-1, 1), ivec2(0, 1), ivec2(1, 1),
+    ivec2(-2, -2), ivec2(0, -2), ivec2(2, -2),
+    ivec2(-2, 0), ivec2(2, 0),
+    ivec2(-2, 2), ivec2(0, 2), ivec2(2, 2),
+
+    ivec2(-2, -1), ivec2(1, -2), ivec2(2, -1),
+    ivec2(-1, -2), ivec2(-1, 2),
+    ivec2(-2, 1), ivec2(1, 2), ivec2(2, 1),
+};
+const int s[]={1,3,5,7,9,11,13,15};
+//const int s[]={1,3,5,7};
+
+float featureDifference(vec3 g1, vec3 g2) {
+    return length(g1 - g2);
+}
+
+void main(){
+
+    ivec2 pixCoord = ivec2(gl_GlobalInvocationID.xy);
+	ivec2 frameSize = textureSize(color, 0);
+	if (pixCoord.x >= frameSize.x || pixCoord.y >= frameSize.y) {
+		return;
+	}
+	vec2 size = vec2(frameSize);
+
+    //find bar_x
+    vec2 mv_curr = texelFetch(mv, pixCoord, 0).xy;
+    ivec2 flow = ivec2(round(mv_curr));
+    ivec2 bar_x = ivec2(pixCoord.x - flow.x, pixCoord.y - flow.y);
+    vec3 mask_curr = texelFetch(mask,pixCoord,0).xyz;
+    //if disoccluded or out-of-screen traverse N(x),calculate mu and sigma
+    if (bar_x.x >= frameSize.x || bar_x.y >= frameSize.y || bar_x.x < 0 || bar_x.y < 0|| mask_curr.x == 1) {
+    //if (mask_curr.x == 1) {
+    //if (true){
+        float sumBaseColor = 0.0;
+        float sumBaseColorSquared = 0.0;
+        float sumNormal = 0.0;
+        float sumNormalSquared = 0.0;
+        float sumSpatial = 0.0;
+        float sumSpatialSquared = 0.0;
+        // int count = 0;
+
+        // for (int i = 0; i < 9; i++) {
+        //     for(int j = 0; j < 4; j++){
+        //         ivec2 offset = offsets[i]*s[j] + bar_x;
+        //         if (offset.x >= frameSize.x || offset.y >= frameSize.y || offset.x < 0 || offset.y < 0) {
+        //             continue;
+        //         }
+
+        //         vec3 neighborBaseColor = texelFetch(baseColor0, offset, 0).xyz;
+        //         vec3 neighborNormal = texelFetch(baseColor1, offset, 0).xyz;
+
+        //         float baseColorDiff = featureDifference(texelFetch(baseColor1, pixCoord, 0).xyz, neighborBaseColor);
+        //         float normalDiff = featureDifference(texelFetch(normal1, pixCoord, 0).xyz, neighborNormal);
+
+        //         float spatialDiff = length(bar_x - offset);
+
+        //         sumSpatial += spatialDiff;
+        //         sumSpatialSquared += spatialDiff * spatialDiff;
+
+        //         sumBaseColor += baseColorDiff;
+        //         sumBaseColorSquared += baseColorDiff * baseColorDiff;
+
+        //         sumNormal += normalDiff;
+        //         sumNormalSquared += normalDiff * normalDiff;
+
+        //         count++;
+        //     }
+        // }
+
+        // float muBaseColor = sumBaseColor / float(count);
+        // float sigmaBaseColor = sqrt((sumBaseColorSquared / float(count)) - (muBaseColor * muBaseColor));
+
+        // float muNormal = sumNormal / float(count);
+        // float sigmaNormal = sqrt((sumNormalSquared / float(count)) - (muNormal * muNormal));
+
+        // float muSpatial = sumSpatial / float(count);
+        // float sigmaSpatial = sqrt((sumSpatialSquared / float(count)) - (muSpatial * muSpatial));
+
+        float muBaseColor = 0;
+        float sigmaBaseColor = 1;
+        float muNormal = 0;
+        float sigmaNormal = 1;
+        float muSpatial = 0;
+        float sigmaSpatial = 10;
+
+        //traverse N(x) again,calculate weight and save 4 pixels with the largest blending weights
+        initializeMaxWeights();
+        for (int i = 0; i < 24; i++) {
+            for(int j = 0; j < 8; j++){
+                ivec2 offset = offsets[i] * s[j] + bar_x;
+                // texelFetch has undefined behavior outside the texture. Skip
+                // invalid neighbors while preserving weights for every valid
+                // sample used by the original implementation.
+                if (offset.x >= frameSize.x || offset.y >= frameSize.y ||
+                    offset.x < 0 || offset.y < 0) {
+                    continue;
+                }
+
+                vec3 neighborBaseColor = texelFetch(baseColor0, offset, 0).xyz;
+                vec3 neighborNormal = texelFetch(normal0, offset, 0).xyz;
+
+
+                float baseColorDiff = length(texelFetch(baseColor1, pixCoord, 0).xyz - neighborBaseColor );
+                float normalDiff = length(texelFetch(normal1, pixCoord, 0).xyz - neighborNormal);
+                float spatialDiff = length(offset - bar_x);
+
+
+                float baseColorWeight = exp(-pow(baseColorDiff - muBaseColor, 2.0) / (2.0 * pow(sigmaBaseColor, 2.0)))*10;
+                float normalWeight = exp(-pow(normalDiff - muNormal, 2.0) / (2.0 * pow(sigmaNormal, 2.0)));
+                float totalWeight = baseColorWeight + normalWeight;
+                //float spatialWeight = exp(-pow(spatialDiff - muSpatial, 2.0) / (2.0 * pow(sigmaSpatial, 2.0)));
+                totalWeight = totalWeight * 1;
+
+
+                updateMaxWeights(offset, totalWeight);
+            }
+        }
+
+        //normalize weights, and blending
+        float weightSum = 0.0;
+        float maxW = 0.0;
+        ivec2 maxPos = ivec2(0,0);
+        vec3 blendedColor = vec3(0.0);
+        for (int i = 0; i < 4; i++) {
+            weightSum += maxWeightPixels[i].weight;
+        }
+
+        // for (int i = 0; i < 4; i++) {
+        //     if(maxWeightPixels[i].weight>maxW){
+        //         maxW = maxWeightPixels[i].weight;
+        //         maxPos = maxWeightPixels[i].position;
+        //     }
+        // }
+
+        if (weightSum > 0.0) {
+            for (int i = 0; i < 4; i++) {
+                ivec2 pos = maxWeightPixels[i].position;
+                float normalizedWeight = maxWeightPixels[i].weight / weightSum;
+                vec3 c = texelFetch(color, pos, 0).xyz;
+                blendedColor += c * normalizedWeight;
+            }
+        }
+
+        imageStore(warpColor, pixCoord, vec4(blendedColor,1.0));
+    }
+    else{
+        vec3 pre_curr = texelFetch(color, bar_x, 0).xyz;
+        imageStore(warpColor, pixCoord, vec4(pre_curr,1.0));
+        //imageStore(warpColor, pixCoord, vec4(0.0,0.0,0.0,1.0));
+    }
+}

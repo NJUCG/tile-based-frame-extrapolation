@@ -1,0 +1,13 @@
+name: tbfe
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip>=24
+  - pip:
+      - numpy>=1.26,<3
+      - PyYAML>=6,<7
+      - pytest>=8,<10
+
+# Install PyTorch for the desired CPU/CUDA target before `pip install -e .`.
+# The exact tested CUDA 12.6 command is documented in README.md.

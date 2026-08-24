@@ -1,0 +1,56 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the Tile-based Frame Extrapolation paper."
+title: "Tile-based Frame Extrapolation"
+type: software
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/NJUCG/tile-based-frame-extrapolation"
+authors:
+  - family-names: Pu
+    given-names: Liang
+    email: 522023330073@smail.nju.edu.cn
+    affiliation: Nanjing University
+  - family-names: Tian
+    given-names: Haodong
+    email: thdlrt@qq.com
+    affiliation: Nanjing University
+  - family-names: Zhang
+    given-names: Jiawei
+    email: 502024330064@smail.nju.edu.cn
+    affiliation: Nanjing University
+  - family-names: Zhang
+    given-names: Weitao
+    email: 502025330070@smail.nju.edu.cn
+    affiliation: Nanjing University
+  - family-names: Guo
+    given-names: Yanwen
+    email: ywguo@nju.edu.cn
+    affiliation: Nanjing University
+  - family-names: Zhu
+    given-names: Junqiu
+    email: junqiuzhu27@gmail.com
+    affiliation: Shandong University
+  - family-names: Guo
+    given-names: Jie
+    email: guojie@nju.edu.cn
+    affiliation: Nanjing University
+preferred-citation:
+  type: conference-paper
+  title: "Tile-based Frame Extrapolation"
+  authors:
+    - family-names: Pu
+      given-names: Liang
+    - family-names: Tian
+      given-names: Haodong
+    - family-names: Zhang
+      given-names: Jiawei
+    - family-names: Zhang
+      given-names: Weitao
+    - family-names: Guo
+      given-names: Yanwen
+    - family-names: Zhu
+      given-names: Junqiu
+    - family-names: Guo
+      given-names: Jie
+  collection-title: "SIGGRAPH Asia 2026 Conference Papers"
+  year: 2026
