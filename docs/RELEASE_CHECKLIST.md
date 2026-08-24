@@ -21,4 +21,5 @@ publication-metadata and hosting checks before the paper release tag:
   check for every public commit and tag.
 - [x] Create the first commit from this clean repository; do not copy the old
   `.git` directory or add a remote pointing at an accidental private fork.
-- [ ] Enable GitHub secret scanning and run CI before tagging `v1.0.0-paper`.
+- [x] Enable GitHub secret scanning and push protection, and run CI before
+  tagging `v1.0.0-paper`.
